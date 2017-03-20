@@ -148,18 +148,23 @@ for i in season_name:
 
 plot_data = plot_data.sort_index()
 
-# Define some random data that emulates your indeded code:
+# define some random data that emulates your indeded code:
 NCURVES = season_block*cluster_step2 + 2
 np.random.seed(101)
 curves = [np.random.random(30) for i in range(NCURVES)]
 values = range(NCURVES)
 
-fig = plt.figure(figsize=(30,20))
-ax = fig.add_subplot(111)
-# jet = colors.Colormap('jet')
 jet = cm = plt.get_cmap('Paired')
 cNorm  = colors.Normalize(vmin=0, vmax=values[-1])
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+print scalarMap.get_clim()
+
+
+fig = plt.figure(figsize=(46,24))
+ax = fig.add_subplot(111)
+# replace the next line
+#jet = colors.Colormap('jet')
+# with
 
 def create_rainbow():
     rainbow = [ax._get_lines.color_cycle.next()]
@@ -177,27 +182,42 @@ def next_color(axis_handle=ax):
     double_rainbow.rotate(-1)
     return nextval, itertools.cycle(double_rainbow)
 
-# 1 year
+#1 year
 plt_legend = []
 for i in season_name:
     for j in range(1,cluster_step2+1):
         plt_legend.append(i + str(j))
 
-
+winter_seperate_list = [range(4380), range(4380, 8760)]
 for c_num in xrange(0,season_block*cluster_step2):
     #nextval, ax._get_lines.color_cycle = next_color(ax)
-    #plt.plot(plot_data.iloc[(plot_data['cluster']==c_num).values,:].index.values,plot_data.iloc[(plot_data['cluster']==c_num).values,:]['demand']*data_max['demand'])
+    #plt.plot(plot_data.iloc[(plot_data['cluster']==c_num).values,:].index.values,plot_data.iloc[(plot_data['cluster']==c_num).values,:]['需要']*data_max['需要'])
     #print "Next color is: ", nextval
     colorVal = scalarMap.to_rgba(values[c_num])
-    ax.plot(plot_data.iloc[(plot_data['cluster']==c_num).values,:].index.values,plot_data.iloc[(plot_data['cluster']==c_num).values,:]['demand'].values,color=colorVal, lw=2)
-plt.legend(plt_legend, bbox_to_anchor=(1.01, 1),loc=2, fontsize=21)
-plt.xlabel("Hour",fontsize=21)
-plt.ylabel("Demand(p.u.)",fontsize=21)
-plt.xticks(fontsize = 21)
-plt.yticks(fontsize = 21)
-#plt.show()
-plt.savefig('scenario_generation/year_demand.png')
+    if c_num in range(cluster_step2*(season_block - 1), season_block*cluster_step2):
+        for k in winter_seperate_list:
+            
+            tmp_index = plot_data.iloc[(plot_data['cluster']==c_num).values,:].index.values
+            tmp_values = plot_data.iloc[(plot_data['cluster']==c_num).values,:]['demand'].values
+            tmp_bool = map(lambda x: x in k, tmp_index)
 
+            tmp_index = pd.Series(tmp_index)[tmp_bool].values
+            tmp_values = pd.Series(tmp_values)[tmp_bool].values
+            ax.plot(tmp_index, tmp_values, color=colorVal, lw=2)
+            
+    else:
+        ax.plot(plot_data.iloc[(plot_data['cluster']==c_num).values,:].index.values,plot_data.iloc[(plot_data['cluster']==c_num).values,:]['demand'].values,color=colorVal, lw=2)
+plt.legend(plt_legend, bbox_to_anchor=(1.01, 1),loc=2, fontsize=45)
+plt.xlabel("Hour",fontsize=55)
+plt.ylabel("Demand(p.u.)",fontsize=55)
+plt.xticks(fontsize = 55)
+plt.yticks(fontsize = 55)
+#plt.show()
+#plt.tight_layout()
+plt.xlim(0,8760)
+plt.subplots_adjust(right=0.8)
+plt.savefig('scenario_generation/year_demand.png')
+plt.close()
 
 
 ############################ Step3 - Step6 ############################
